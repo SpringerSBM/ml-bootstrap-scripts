@@ -1,12 +1,13 @@
-# Initial setup of MarkLogic host
+# Performs initial setup of a MarkLogic host
 #
-# either..
-#   configures security - for standalone host or first (bootstrap) host of cluster
-# or..
-#   joins existing cluster at $CLUSTER_BOOTSTRAP_HOST
+# Initialises host and then either
+# - configures security - for standalone host or first (bootstrap) host of cluster; or
+# - joins existing cluster at $CLUSTER_BOOTSTRAP_HOST#
 #
-# see check_env() for requried environment variables
-
+# See README.md or check_env() for requried environment variables
+#
+# Based on samples in ml docs:
+# http://docs.marklogic.com/guide/admin-api/cluster#chapter
 
 AUTH="--anyauth --user ${ADMIN_USER}:${ADMIN_PASS}"
 LATEST_TS="0"
