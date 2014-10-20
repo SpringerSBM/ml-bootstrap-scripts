@@ -1,6 +1,6 @@
 # MarkLogic bootstrap scripts
 
-Performs initial setup of a MarkLogic host
+Performs initial setup of a MarkLogic host. Assumes MarkLogic has been installed and started.
 
 Initialises host and then either
 - configures security - for standalone host or first (bootstrap) host of cluster; or
