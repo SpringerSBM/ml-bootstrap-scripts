@@ -102,3 +102,5 @@ join_cluster() {
 
   echo "Added ${HOST} to cluster ${CLUSTER_BOOTSTRAP_HOST}"
 }
+
+configure
