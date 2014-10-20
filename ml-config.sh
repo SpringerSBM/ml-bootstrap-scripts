@@ -1,17 +1,31 @@
+# Initial setup of MarkLogic host
+#
+# either..
+#   configures security - for standalone host or first (bootstrap) host of cluster
+# or..
+#   joins existing cluster at $CLUSTER_BOOTSTRAP_HOST
+#
+# see check_env() for requried environment variables
+
+
 AUTH="--anyauth --user ${ADMIN_USER}:${ADMIN_PASS}"
 LATEST_TS="0"
 
-env_missing() {
-  echo "Error: Environment variable ${1} not set."
-  exit 1
-}
-
 check_env() {
+  ENV_OK=true
   [ -n "${HOST}" ] || env_missing "HOST"
   [ -n "${LICENSE_KEY}" ] || env_missing "LICENSE_KEY"
   [ -n "${LICENSEE}" ] || env_missing "LICENSEE"
   [ -n "${ADMIN_USER}" ] || env_missing "ADMIN_USER"
   [ -n "${ADMIN_PASS}" ] || env_missing "ADMIN_PASS"
+  if [ "${ENV_OK}" = false ] ; then
+    exit 1
+  fi
+}
+
+env_missing() {
+  echo "Environment variable ${1} not set."
+  ENV_OK=false
 }
 
 start_time() {
@@ -34,7 +48,6 @@ check_timestamp() {
 }
 
 configure() {
-  check_env
   echo "Configuring ${HOST} .."
   check_timestamp
   initialize
@@ -103,4 +116,5 @@ join_cluster() {
   echo "Added ${HOST} to cluster ${CLUSTER_BOOTSTRAP_HOST}"
 }
 
+check_env
 configure
