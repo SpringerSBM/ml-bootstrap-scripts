@@ -119,7 +119,7 @@ join_cluster() {
   # post the cluster config to the new host
   curl -sS -X POST \
     -H "Content-type: application/zip" \
-    --data-binary @./cluster-config.zip \
+    --data-binary @/tmp/cluster-config.zip \
     "http://${HOST}:8001/admin/v1/cluster-config"
 
   check_timestamp
