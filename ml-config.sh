@@ -30,9 +30,9 @@ env_missing() {
 }
 
 check_already_configured() {
-  # will return 401 and non-zero exit code if security has been setup
-  curl -sf "http://${HOST}:8001/admin/v1/timestamp"
-  if [ "$?" != "0" ]; then
+  # will return 401 if security has already been setup
+  local STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${HOST}:8001/admin/v1/timestamp")
+  if [ "${STATUS}" = "401" ]; then
     echo "Exiting because already configured."
     exit 0
   fi
