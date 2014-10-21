@@ -29,6 +29,16 @@ env_missing() {
   ENV_OK=false
 }
 
+check_already_configured() {
+  # will return 401 if security has been setup
+  $(curl -sf "http://${HOST}:8001/admin/v1/timestamp")
+  if [ "$?" != "0" ]; then
+    echo "Exiting because already configured."
+    exit 0
+  fi
+}
+
+
 start_time() {
   echo $(curl -s $AUTH "http://${HOST}:8001/admin/v1/timestamp")
 }
@@ -118,4 +128,5 @@ join_cluster() {
 }
 
 check_env
+check_already_configured
 configure
