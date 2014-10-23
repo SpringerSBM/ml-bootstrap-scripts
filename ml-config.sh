@@ -67,6 +67,7 @@ configure() {
   else
     setup_security
   fi
+  setup_availability_zone
 }
 
 initialize() {
@@ -88,6 +89,26 @@ setup_security() {
     --data-urlencode "realm=public" \
     "http://${HOST}:8001/admin/v1/instance-admin" > /dev/null
   check_timestamp
+}
+
+# Setup availability zone
+# http://docs.marklogic.com/REST/PUT/manage/v2/hosts/%5Bid-or-name%5D/properties
+setup_availability_zone() {
+  if [ "${AVAILABILITY_ZONE}" ]; then
+    echo "Setting up availability zone to '${AVAILABILITY_ZONE}'"
+    set -x
+    local STATUS=$(
+      curl -s -o /dev/null -w "%{http_code}" \
+        --anyauth --user "${ADMIN_USER}:${ADMIN_PASS}" \
+        -X PUT -d "{ \"zone\":\"${AVAILABILITY_ZONE}\" }" \
+        -H "Content-type: application/json" \
+        http://${HOST}:8002/manage/v2/hosts/${HOST}/properties
+    )
+    if [ "${STATUS}" != "204" ]; then
+      echo "Failed setting availability zone. Return code: $STATUS"
+      exit 1
+    fi
+  fi
 }
 
 join_cluster() {
