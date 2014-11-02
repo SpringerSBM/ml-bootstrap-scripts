@@ -54,7 +54,7 @@ check_timestamp() {
       return 0
     fi
   done
-  echo "ERROR: Failed to start"
+  echo "ERROR: Failed to get host statup timestamp"
   exit 1
 }
 
@@ -95,18 +95,23 @@ setup_security() {
 # http://docs.marklogic.com/REST/PUT/manage/v2/hosts/%5Bid-or-name%5D/properties
 setup_availability_zone() {
   if [ "${AVAILABILITY_ZONE}" ]; then
-    echo "Setting up availability zone to '${AVAILABILITY_ZONE}'"
-    set -x
+    echo "Setting availability zone to '${AVAILABILITY_ZONE}'"
     local STATUS=$(
-      curl -s -o /dev/null -w "%{http_code}" \
-        --anyauth --user "${ADMIN_USER}:${ADMIN_PASS}" \
+      curl -s ${AUTH} -o /dev/null -w "%{http_code}" \
         -X PUT -d "{ \"zone\":\"${AVAILABILITY_ZONE}\" }" \
         -H "Content-type: application/json" \
         http://${HOST}:8002/manage/v2/hosts/${HOST}/properties
     )
     if [ "${STATUS}" != "204" ]; then
       echo "Failed setting availability zone. Return code: $STATUS"
-      exit 1
+      if [ "$1" == "attempt2" ]; then
+        exit 1
+      else
+        # this seems flaky so try again
+        echo "Trying again .."
+        sleep 2
+        setup_availability_zone "attempt2"
+      fi
     fi
   fi
 }
