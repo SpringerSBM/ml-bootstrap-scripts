@@ -54,7 +54,7 @@ check_timestamp() {
       return 0
     fi
   done
-  echo "ERROR: Failed to get host statup timestamp"
+  echo "ERROR: Failed to get host startup timestamp"
   exit 1
 }
 
