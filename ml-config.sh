@@ -10,7 +10,6 @@
 # http://docs.marklogic.com/guide/admin-api/cluster#chapter
 
 AUTH="--anyauth --user ${ADMIN_USER}:${ADMIN_PASS}"
-LATEST_TS="0"
 
 check_env() {
   ENV_OK=true
@@ -38,35 +37,41 @@ check_already_configured() {
   fi
 }
 
-
-start_time() {
-  echo $(curl -s $AUTH "http://${HOST}:8001/admin/v1/timestamp")
+get_timestamp() {
+    set +e
+    serverTimestamp=`curl -s ${AUTH} "http://${HOST}:8001/admin/v1/timestamp"`
+    set -e
+    echo "${serverTimestamp}"
 }
 
-check_timestamp() {
-  local current_ts=$(start_time)
+poll_until_timestamp_changes() {
+  local originalTimestamp=$1
   for i in $(seq 1 10); do
-    if [ "${LATEST_TS}" == "${current_ts}" ] || [ "${current_ts}" == "" ]; then
+    latestTimestamp=`get_timestamp`
+    if [ "${latestTimestamp}" == "" ] || [ "${latestTimestamp}" == "${originalTimestamp}" ] ; then
+      printf '.'
       sleep 2
-      current_ts=$(start_time)
     else
-      LATEST_TS="${current_ts}"
+      echo "Restart confirmed"
       return 0
     fi
   done
-  echo "ERROR: Failed to get host startup timestamp"
+  echo "ERROR: Unable to confirm server restart within the allotted time."
   exit 1
 }
 
 configure() {
   echo "Configuring ${HOST} .."
-  check_timestamp
+  latest_ts=`get_timestamp`
   initialize
+  poll_until_timestamp_changes "${latest_ts}"
+  latest_ts=`get_timestamp`
   if [ -n "${CLUSTER_BOOTSTRAP_HOST}" ]; then
     join_cluster
   else
     setup_security
   fi
+  poll_until_timestamp_changes "${latest_ts}"
   setup_availability_zone
 }
 
@@ -77,7 +82,6 @@ initialize() {
     --data-urlencode "license-key=${LICENSE_KEY}" \
     --data-urlencode "licensee=${LICENSEE}" \
     "http://${HOST}:8001/admin/v1/init" > /dev/null
-  check_timestamp
 }
 
 setup_security() {
@@ -88,7 +92,6 @@ setup_security() {
     --data-urlencode "admin-password=${ADMIN_PASS}" \
     --data-urlencode "realm=public" \
     "http://${HOST}:8001/admin/v1/instance-admin" > /dev/null
-  check_timestamp
 }
 
 # Setup availability zone
@@ -147,8 +150,6 @@ join_cluster() {
     -H "Content-type: application/zip" \
     --data-binary @/tmp/cluster-config.zip \
     "http://${HOST}:8001/admin/v1/cluster-config"
-
-  check_timestamp
 
   echo "Added ${HOST} to cluster ${CLUSTER_BOOTSTRAP_HOST}"
 }
