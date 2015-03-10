@@ -154,6 +154,19 @@ join_cluster() {
   echo "Added ${HOST} to cluster ${CLUSTER_BOOTSTRAP_HOST}"
 }
 
+function poll_until_up() {
+  for attempt in `seq 1 10`
+  do 
+  	if `nc $HOST 8001 </dev/null &> /dev/null`; then
+  		return
+  	fi
+  	sleep 1
+  done
+  echo "Unable to connect to $HOST:8001 after 10 tries."
+  exit 1
+}
+
 check_env
+poll_until_up
 check_already_configured
 configure
